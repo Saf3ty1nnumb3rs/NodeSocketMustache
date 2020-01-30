@@ -10,6 +10,29 @@ const $sendLocationButton = document.querySelector('#send_location')
 // Templates
 const messageTemplate = document.querySelector('#message-template').innerHTML
 const locationTemplate = document.querySelector('#location-template').innerHTML
+const sidebarTemplate = document.querySelector('#sidebar-template').innerHTML
+
+// Options
+const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true })
+
+const autoScroll = () => {
+  // New message eleement
+  const $newMessage = $messages.lastElementChild
+  // Height of new message
+  const newMessageStyles = getComputedStyle($newMessage)
+  const newMessageMargin = parseInt(newMessageStyles.marginBottom)
+  const newMessageHeight = $newMessage.offsetHeight + newMessageMargin
+  // Visible height
+  const visibleHeight = $messages.offsetHeight
+  // Height of messages container
+  const containerHeight = $messages.scrollHeight
+  // How far, have I scrolled
+  const scrollOffset = $messages.scrollTop + visibleHeight
+
+  if (containerHeight - newMessageHeight <= scrollOffset) {
+    $messages.scrollTop = $messages.scrollHeight
+  }
+}
 // Message Input Form //
 $messageForm.addEventListener('submit', e => {
   e.preventDefault()
@@ -25,20 +48,31 @@ $messageForm.addEventListener('submit', e => {
 })
 // Message Recieve and Display //
 socket.on('message', message => {
-  console.log(message)
   const html = Mustache.render(messageTemplate, {
+    username: message.username,
     message: message.text,
-    createdAt: message.createdAt
+    createdAt: moment(message.createdAt).format('h:mm:ss a')
   })
   $messages.insertAdjacentHTML('beforeend', html)
+  autoScroll()
 })
 
 socket.on('location_message', url => {
   console.log(url)
   const html = Mustache.render(locationTemplate, {
-    url
+    username: url.username,
+    url: url.url,
+    createdAt: moment(url.createdAt).format('h:mm:ss a')
   })
   $messages.insertAdjacentHTML('beforeend', html)
+})
+
+socket.on('room_data', ({ room, users }) => {
+  const html = Mustache.render(sidebarTemplate, {
+    room: room.toUpperCase(),
+    users
+  })
+  document.querySelector('#sidebar').innerHTML = html
 })
 
 // User Joins Chat //
@@ -56,3 +90,5 @@ $sendLocationButton.addEventListener('click', () => {
     })
   })
 })
+
+socket.emit('join', { username, room }, error => {})
