@@ -24,7 +24,7 @@
     "mongoose": "^5.8.9",
     "path": "^0.12.7",
     "socket.io": "^2.3.0",
-    "validator": "^12.2.0"
+    "validator": "^13.7.0"
   },
   "devDependencies": {
     "env-cmd": "^10.0.1",
